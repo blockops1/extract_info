@@ -8,15 +8,7 @@ pdf
 bmp
 47494638
 gif
-ffd8ffe0
-jpg
-ffd8ffe1
-jpg
-ffd8ffe8
-jpg
-ffd8ffe2
-jpg
-ffd8ffe3
+ffd8ff
 jpg
 52494646
 avi
