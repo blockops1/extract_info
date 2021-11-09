@@ -2,7 +2,7 @@ import binascii
 import hashlib
 import os
 import sys
-
+import time
 
 class IterRegistry(type):
     def __iter__(self):
@@ -21,6 +21,8 @@ class FoundFile(metaclass=IterRegistry):
         self.size = 0
         self.end = 0
         self.hash = 0
+        self.header = ""
+        self.trailer = ""
 
 
 def recover_file(file_handle, found_temp):
@@ -50,7 +52,7 @@ def avi(file_handle, position, temp_object):
     temp_object.name = str(temp_object.start) + ".avi"
     temp_object.end = temp_obj.start + temp_obj.size
     temp_object.type = "avi"
-    print("calling recover file for avi")
+    # print("calling recover file for avi")
     # x = temp_object
     # print("name: ", x.name, " type:", x.type, " start:", x.start, " end:", x.end, " size:", x.size, " hash:", x.hash)
     recover_file(file_handle, temp_object)
@@ -77,7 +79,7 @@ def jpg(file_handle, position, temp_object):
         position_jpg += 1
     temp_object.end = end_position_jpg
     temp_object.size = temp_object.end - temp_object.start
-    x = temp_object
+    # x = temp_object
     # print("name: ", x.name, " type:", x.type, " start:", x.start, " end:", x.end, " size:", x.size, " hash:", x.hash)
     # print("calling recover file for jpg")
     recover_file(file_handle, temp_object)
@@ -102,7 +104,7 @@ def png(file_handle, position, temp_object):
         position_png += 1
     temp_object.end = end_position_png
     temp_object.size = temp_object.end - temp_object.start
-    x = temp_object
+    # x = temp_object
     # print("name: ", x.name, " type:", x.type, " start:", x.start, " end:", x.end, " size:", x.size, " hash:", x.hash)
     # print("calling recover file for jpg")
     recover_file(file_handle, temp_object)
@@ -118,7 +120,7 @@ def mpg(file_handle, position, temp_object):
     # look for file end marker
     end_position_png = 0
     # search for end of file
-    while position_png < file_size:
+    while position_png < file_size - 4:
         file_handle.seek(position_png)
         current_bytes = bytes.hex(file_handle.read(4))
         if current_bytes == "000001b9" or current_bytes == "000001b7":
@@ -126,9 +128,79 @@ def mpg(file_handle, position, temp_object):
             end_position_png = position_png
             break
         position_png += 1
+        if position_png % 10000000 == 0:
+            print(position_png)
+    if end_position_png == 0:
+        end_position_png = position_png + 4
     temp_object.end = end_position_png
     temp_object.size = temp_object.end - temp_object.start
     x = temp_object
+    print("name: ", x.name, " type:", x.type, " start:", x.start, " end:", x.end, " size:", x.size, " hash:", x.hash)
+    print("calling recover file for mpg")
+    time.sleep(5)
+    recover_file(file_handle, temp_object)
+    return 0
+
+def pdf(file_handle, position, temp_object):
+    # print("position in function png:", position)
+    temp_object.name = str(position) + ".pdf"
+    temp_object.type = "pdf"
+    temp_object.start = position
+    position_png = position
+    # look for file end marker
+    end_position_png = 0
+    # search for end of file
+    current_bytes = ""
+    while position_png < file_size:
+        file_handle.seek(position_png)
+        current_bytes = bytes.hex(file_handle.read(7))
+        if current_bytes == "0a2525454f460a" or current_bytes == "0d2525454f460d":
+            # end of file found
+            end_position_png = position_png
+            break
+        file_handle.seek(position_png)
+        current_bytes = bytes.hex(file_handle.read(6))
+        if current_bytes == "0a2525454f46":
+            # end of file found
+            end_position_png = position_png
+            break
+        file_handle.seek(position_png)
+        current_bytes = bytes.hex(file_handle.read(9))
+        if current_bytes == "0d0a2525454f460d0a":
+            # end of file found
+            end_position_png = position_png
+            break
+        position_png += 1
+    print("pdf ending string:", current_bytes)
+    # time.sleep(5)
+    temp_object.end = end_position_png
+    temp_object.size = temp_object.end - temp_object.start
+    x = temp_object
+    recover_file(file_handle, temp_object)
+    return 0
+
+def gif(file_handle, position, temp_object):
+    # print("position in function png:", position)
+    temp_object.name = str(position) + ".gif"
+    temp_object.type = "gif"
+    temp_object.start = position
+    position_png = position
+    # look for file end marker
+    end_position_png = 0
+    # search for end of file
+    while position_png < file_size:
+        file_handle.seek(position_png)
+        current_bytes = bytes.hex(file_handle.read(2))
+        if current_bytes == "003b":
+            # end of file found
+            end_position_png = position_png
+            break
+        position_png += 1
+    temp_object.end = end_position_png
+    temp_object.size = temp_object.end - temp_object.start
+    # x = temp_object
+    # print("name: ", x.name, " type:", x.type, " start:", x.start, " end:", x.end, " size:", x.size, " hash:", x.hash)
+    # print("calling recover file for jpg")
     recover_file(file_handle, temp_object)
     return 0
 
@@ -179,7 +251,7 @@ if __name__ == '__main__':
         exit(0)
     position = 0
     file_size = os.path.getsize(filename)
-    file_size = 60000000
+    # file_size = 60000000
     while position < file_size:
         working_file.seek(position)
         current_byte = working_file.read(1)
@@ -217,6 +289,18 @@ if __name__ == '__main__':
                 if specific_signatures[test_signature] == "mpg":
                     temp_obj = FoundFile()
                     mpg(working_file, position, temp_obj)
+                    position = temp_obj.end
+                    found_files.append(temp_obj)
+                    working_file.seek(position)
+                if specific_signatures[test_signature] == "pdf":
+                    temp_obj = FoundFile()
+                    pdf(working_file, position, temp_obj)
+                    position = temp_obj.end
+                    found_files.append(temp_obj)
+                    working_file.seek(position)
+                if specific_signatures[test_signature] == "gif":
+                    temp_obj = FoundFile()
+                    gif(working_file, position, temp_obj)
                     position = temp_obj.end
                     found_files.append(temp_obj)
                     working_file.seek(position)
