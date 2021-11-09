@@ -84,6 +84,52 @@ def jpg(file_handle, position, temp_object):
     return 0
 
 def png(file_handle, position, temp_object):
+    # print("position in function png:", position)
+    temp_object.name = str(position) + ".png"
+    temp_object.type = "png"
+    temp_object.start = position
+    position_png = position
+    # look for file end marker
+    end_position_png = 0
+    # search for end of file
+    while position_png < file_size:
+        file_handle.seek(position_png)
+        current_bytes = bytes.hex(file_handle.read(8))
+        if current_bytes == "49454e44ae426082":
+            # end of file found
+            end_position_png = position_png
+            break
+        position_png += 1
+    temp_object.end = end_position_png
+    temp_object.size = temp_object.end - temp_object.start
+    x = temp_object
+    # print("name: ", x.name, " type:", x.type, " start:", x.start, " end:", x.end, " size:", x.size, " hash:", x.hash)
+    # print("calling recover file for jpg")
+    recover_file(file_handle, temp_object)
+    return 0
+
+
+def mpg(file_handle, position, temp_object):
+    # print("position in function png:", position)
+    temp_object.name = str(position) + ".mpg"
+    temp_object.type = "mpg"
+    temp_object.start = position
+    position_png = position
+    # look for file end marker
+    end_position_png = 0
+    # search for end of file
+    while position_png < file_size:
+        file_handle.seek(position_png)
+        current_bytes = bytes.hex(file_handle.read(4))
+        if current_bytes == "000001b9" or current_bytes == "000001b7":
+            # end of file found
+            end_position_png = position_png
+            break
+        position_png += 1
+    temp_object.end = end_position_png
+    temp_object.size = temp_object.end - temp_object.start
+    x = temp_object
+    recover_file(file_handle, temp_object)
     return 0
 
 def print_results():
@@ -165,6 +211,12 @@ if __name__ == '__main__':
                 if specific_signatures[test_signature] == "png":
                     temp_obj = FoundFile()
                     png(working_file, position, temp_obj)
+                    position = temp_obj.end
+                    found_files.append(temp_obj)
+                    working_file.seek(position)
+                if specific_signatures[test_signature] == "mpg":
+                    temp_obj = FoundFile()
+                    mpg(working_file, position, temp_obj)
                     position = temp_obj.end
                     found_files.append(temp_obj)
                     working_file.seek(position)
