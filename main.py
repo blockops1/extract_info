@@ -218,8 +218,8 @@ def gif2(file_handle, position, temp_object):
             # print("possible pdf ending string:", end_position_png)
         # check for new file type signature
         # if end_position_png > 0 and current_bytes in specific_signatures:
-            # print("matched signature:", current_bytes, " for:", specific_signatures[current_bytes])
-            # break
+        # print("matched signature:", current_bytes, " for:", specific_signatures[current_bytes])
+        # break
         # now scan for start of a new filetype to find the real end of the gif
         file_handle.seek(position_png)
         current_bytes = bytes.hex(file_handle.read(4))
@@ -343,7 +343,7 @@ if __name__ == '__main__':
     first_byte_text = {'00': "mpg", "25": "pdf", "42": "bmp", "47": "gif", "ff": "jpg", "50": "docx",
                        "52": "avi", "89": "png"}
     # setup key/value number of bytes to read based on the first byte
-    number_of_bytes = {'mpg': 4, 'pdf': 4, 'bmp': 2, 'gif': 4, 'jpg': 6, 'docx': 8, 'avi': 4, 'png': 8}
+    number_of_bytes = {'mpg': 4, 'pdf': 4, 'bmp': 2, 'gif': 4, 'jpg': 4, 'docx': 8, 'avi': 4, 'png': 8}
     specific_signatures = {}
     # read signatures from file signature.txt
     try:
@@ -367,9 +367,13 @@ if __name__ == '__main__':
     except IOError:
         print("File not found")
         exit(0)
+    # print("first byte text", first_byte_text)
+    # print("number of bytes", number_of_bytes)
+    # for x in first_byte_text:
+    #    print(x, first_byte_text[x], number_of_bytes[first_byte_text[x]])
     position = 0
     file_size = os.path.getsize(filename)
-    # file_size = 60000000
+    # file_size = 300000
     while position < file_size:
         working_file.seek(position)
         current_byte = working_file.read(1)
@@ -381,9 +385,16 @@ if __name__ == '__main__':
         working_text = bytes.hex(current_byte)
         if working_text in first_byte_text:
             # get number of bytes to read
+            # if working_text == "ff":
+            #  print("at position", position, "byte is", working_text)
             read_amount = number_of_bytes[first_byte_text[working_text]]
+            # if position == 229376:
+            #    print("at position 229376, byte is", working_text, "read amount is", read_amount)
             working_file.seek(position)
             test_signature = bytes.hex(working_file.read(read_amount))
+            # if working_text == "ff":
+            #    print("at position", position, "working text", working_text, first_byte_text[working_text],
+            #          number_of_bytes[first_byte_text[working_text]], read_amount, "test signature", test_signature)
             # now that the correct number of bytes read, try to match against file signatures
             if test_signature in specific_signatures:
                 # print("offset:", position, " signature:", test_signature, " file type:", specific_signatures[test_signature])
@@ -395,6 +406,7 @@ if __name__ == '__main__':
                     found_files.append(temp_obj)
                     working_file.seek(position)
                 if specific_signatures[test_signature] == "jpg":
+                    # print("matched signature:", test_signature, " for:", specific_signatures[test_signature])
                     temp_obj = FoundFile()
                     jpg(working_file, position, temp_obj)
                     position = temp_obj.end
