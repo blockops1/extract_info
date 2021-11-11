@@ -198,6 +198,56 @@ def pdf(file_handle, position, temp_object):
     return 0
 
 
+def gif2(file_handle, position, temp_object):
+    # print("position in function png:", position)
+    temp_object.name = str(position) + ".gif"
+    temp_object.type = "gif"
+    temp_object.start = position
+    position_png = position
+    # look for file end marker
+    end_position_png = 0
+    # search for end of file
+    current_bytes = ""
+    end_position_png = 0
+    while position_png < file_size:
+        file_handle.seek(position_png)
+        current_bytes = bytes.hex(file_handle.read(1))
+        if current_bytes == "3b":
+            # possible end of file found
+            end_position_png = position_png
+            # print("possible pdf ending string:", end_position_png)
+        # check for new file type signature
+        # if end_position_png > 0 and current_bytes in specific_signatures:
+            # print("matched signature:", current_bytes, " for:", specific_signatures[current_bytes])
+            # break
+        # now scan for start of a new filetype to find the real end of the gif
+        file_handle.seek(position_png)
+        current_bytes = bytes.hex(file_handle.read(4))
+        if end_position_png > 0 and current_bytes in specific_signatures:
+            # print("matched signature:", current_bytes, " for:", specific_signatures[current_bytes])
+            break
+        # now scan for start of a new filetype to find the real end of the gif
+        file_handle.seek(position_png)
+        current_bytes = bytes.hex(file_handle.read(6))
+        if end_position_png > 0 and current_bytes in specific_signatures:
+            # print("matched signature:", current_bytes, " for:", specific_signatures[current_bytes])
+            break
+        # now scan for start of a new filetype to find the real end of the gif
+        file_handle.seek(position_png)
+        current_bytes = bytes.hex(file_handle.read(8))
+        if end_position_png > 0 and current_bytes in specific_signatures:
+            # print("matched signature:", current_bytes, " for:", specific_signatures[current_bytes])
+            break
+        position_png += 1
+    # print("pdf ending string position:", end_position_png)
+    # time.sleep(5)
+    temp_object.end = end_position_png
+    temp_object.size = temp_object.end - temp_object.start
+    x = temp_object
+    recover_file(file_handle, temp_object)
+    return 0
+
+
 def gif(file_handle, position, temp_object):
     # print("position in function png:", position)
     temp_object.name = str(position) + ".gif"
@@ -211,7 +261,7 @@ def gif(file_handle, position, temp_object):
         file_handle.seek(position_png)
         current_bytes = bytes.hex(file_handle.read(2))
         if current_bytes == "003b":
-            # end of file found
+            # possible end of file found
             end_position_png = position_png
             break
         position_png += 1
@@ -272,7 +322,7 @@ def docx(file_handle, position, temp_object):
 
 def print_results():
     for x in found_files:
-        print("name: ", x.name, " type:", x.type, " start:", x.start, " end:", x.end, " size:", x.size, " hash:",
+        print("name:", x.name, "type:", x.type, "start:", x.start, "end:", x.end, "size:", x.size, "hash:",
               x.hash)
     return 0
 
@@ -370,7 +420,7 @@ if __name__ == '__main__':
                     working_file.seek(position)
                 if specific_signatures[test_signature] == "gif":
                     temp_obj = FoundFile()
-                    gif(working_file, position, temp_obj)
+                    gif2(working_file, position, temp_obj)
                     position = temp_obj.end
                     found_files.append(temp_obj)
                     working_file.seek(position)
@@ -388,8 +438,6 @@ if __name__ == '__main__':
                         found_files.append(temp_obj)
                         working_file.seek(position)
         position += 1
-        # ?? round two on pdf's?
-        # zip files
     # cleanup by closing the file
     working_file.close()
     print("printing results")
