@@ -325,6 +325,7 @@ def print_results():
     for x in found_files:
         print("name:", x.name, "Start Offset:", hex(x.start), "End Offset:", hex(x.end), "hash:",
               x.hash)
+        print("size:", x.size, "error?", x.end - x.start - x.size)
     return 0
 
 
