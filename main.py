@@ -130,13 +130,10 @@ def mpg(file_handle, position, temp_object):
             end_position_png = position_png + 3
             break
         position_png += 1
-<<<<<<< HEAD
     # if end_position_png == 0:
     #    end_position_png = position_png + 4
-=======
     if end_position_png == 0:
         end_position_png = position_png + 7
->>>>>>> old-state
     temp_object.end = end_position_png
     temp_object.size = temp_object.end - temp_object.start
     # x = temp_object
@@ -327,15 +324,12 @@ def docx(file_handle, position, temp_object):
 
 def print_results():
     for x in found_files:
-<<<<<<< HEAD
         print("name:", x.name, "Start Offset:", hex(x.start), "End Offset:", hex(x.end), "hash:",
               x.hash)
         print("size:", x.size, "error?", x.end - x.start - x.size)
-=======
         print("name:", x.name, "start:", hex(x.start), "end:", hex(x.end), "hash:",
               x.hash)
         # print("size:", x.size, "difference:", x.end - x.start - x.size)
->>>>>>> old-state
     return 0
 
 
