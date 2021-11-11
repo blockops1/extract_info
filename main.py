@@ -4,6 +4,7 @@ import os
 import sys
 import time
 
+
 class IterRegistry(type):
     def __iter__(self):
         for attr in dir(self):
@@ -85,6 +86,7 @@ def jpg(file_handle, position, temp_object):
     recover_file(file_handle, temp_object)
     return 0
 
+
 def png(file_handle, position, temp_object):
     # print("position in function png:", position)
     temp_object.name = str(position) + ".png"
@@ -138,6 +140,7 @@ def mpg(file_handle, position, temp_object):
     time.sleep(5)
     recover_file(file_handle, temp_object)
     return 0
+
 
 def pdf(file_handle, position, temp_object):
     # print("position in function png:", position)
@@ -194,6 +197,7 @@ def pdf(file_handle, position, temp_object):
     recover_file(file_handle, temp_object)
     return 0
 
+
 def gif(file_handle, position, temp_object):
     # print("position in function png:", position)
     temp_object.name = str(position) + ".gif"
@@ -219,6 +223,7 @@ def gif(file_handle, position, temp_object):
     recover_file(file_handle, temp_object)
     return 0
 
+
 def bmp(file_handle, position, temp_object):
     # print("position in function avi:", position)
     file_handle.seek(position + 2)
@@ -239,9 +244,36 @@ def bmp(file_handle, position, temp_object):
     return 0
 
 
+def docx(file_handle, position, temp_object):
+    # print("position in function jpg:", position)
+    temp_object.name = str(position) + ".docx"
+    temp_object.type = "docx"
+    temp_object.start = position
+    position_jpg = position
+    # look for file end marker
+    end_position_jpg = 0
+    # search for end of file
+    while position_jpg < file_size:
+        file_handle.seek(position_jpg)
+        current_bytes = bytes.hex(file_handle.read(4))
+        if current_bytes == "504b0506":
+            # end of file found
+            end_position_jpg = position_jpg + 22
+            break
+        position_jpg += 1
+    temp_object.end = end_position_jpg
+    temp_object.size = temp_object.end - temp_object.start
+    # x = temp_object
+    # print("name: ", x.name, " type:", x.type, " start:", x.start, " end:", x.end, " size:", x.size, " hash:", x.hash)
+    # print("calling recover file for jpg")
+    recover_file(file_handle, temp_object)
+    return 0
+
+
 def print_results():
     for x in found_files:
-        print("name: ", x.name, " type:", x.type, " start:", x.start, " end:",  x.end, " size:", x.size, " hash:", x.hash)
+        print("name: ", x.name, " type:", x.type, " start:", x.start, " end:", x.end, " size:", x.size, " hash:",
+              x.hash)
     return 0
 
 
@@ -258,10 +290,10 @@ if __name__ == '__main__':
     object_counter = 0
     # setup signature hash table
     # setup a key/value dictionary for the first byte of the file types searching for. work in string
-    first_byte_text = {'00': "mpg", "25": "pdf", "42": "bmp", "47": "gif", "ff": "jpg", "50": "zip",
+    first_byte_text = {'00': "mpg", "25": "pdf", "42": "bmp", "47": "gif", "ff": "jpg", "50": "docx",
                        "52": "avi", "89": "png"}
     # setup key/value number of bytes to read based on the first byte
-    number_of_bytes = {'mpg': 4, 'pdf': 4, 'bmp': 2, 'gif': 4, 'jpg': 6, 'zip': 4, 'avi': 4, 'png': 8}
+    number_of_bytes = {'mpg': 4, 'pdf': 4, 'bmp': 2, 'gif': 4, 'jpg': 6, 'docx': 8, 'avi': 4, 'png': 8}
     specific_signatures = {}
     # read signatures from file signature.txt
     try:
@@ -339,6 +371,12 @@ if __name__ == '__main__':
                 if specific_signatures[test_signature] == "gif":
                     temp_obj = FoundFile()
                     gif(working_file, position, temp_obj)
+                    position = temp_obj.end
+                    found_files.append(temp_obj)
+                    working_file.seek(position)
+                if specific_signatures[test_signature] == "docx":
+                    temp_obj = FoundFile()
+                    docx(working_file, position, temp_obj)
                     position = temp_obj.end
                     found_files.append(temp_obj)
                     working_file.seek(position)

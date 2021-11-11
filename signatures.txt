@@ -14,5 +14,5 @@ jpg
 avi
 89504e470d0a1a0a
 png
-504b0304
-zip
+504b030414000600
+docx
