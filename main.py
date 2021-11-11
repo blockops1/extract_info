@@ -24,6 +24,7 @@ class FoundFile(metaclass=IterRegistry):
         self.hash = 0
         self.header = ""
         self.trailer = ""
+        self.signature = ""
 
 
 def recover_file(file_handle, found_temp):
@@ -48,7 +49,7 @@ def avi(file_handle, position, temp_object):
     # print("position in function avi:", position)
     file_handle.seek(position + 4)
     temp_object.start = position
-    temp_object.size = int.from_bytes(file_handle.read(4), 'little') + 8
+    temp_object.size = int.from_bytes(file_handle.read(4), 'little') + 5
     # create avi file object, recover file, and computes sha256
     temp_object.name = str(temp_object.start) + ".avi"
     temp_object.end = temp_obj.start + temp_obj.size
@@ -75,7 +76,7 @@ def jpg(file_handle, position, temp_object):
         current_bytes = bytes.hex(file_handle.read(2))
         if current_bytes == "ffd9":
             # end of file found
-            end_position_jpg = position_jpg
+            end_position_jpg = position_jpg + 1
             break
         position_jpg += 1
     temp_object.end = end_position_jpg
@@ -101,7 +102,7 @@ def png(file_handle, position, temp_object):
         current_bytes = bytes.hex(file_handle.read(8))
         if current_bytes == "49454e44ae426082":
             # end of file found
-            end_position_png = position_png
+            end_position_png = position_png + 7
             break
         position_png += 1
     temp_object.end = end_position_png
@@ -127,11 +128,11 @@ def mpg(file_handle, position, temp_object):
         current_bytes = bytes.hex(file_handle.read(4))
         if current_bytes == "000001b9" or current_bytes == "000001b7":
             # end of file found
-            end_position_png = position_png
+            end_position_png = position_png + 3
             break
         position_png += 1
-    if end_position_png == 0:
-        end_position_png = position_png + 4
+    # if end_position_png == 0:
+    #    end_position_png = position_png + 4
     temp_object.end = end_position_png
     temp_object.size = temp_object.end - temp_object.start
     # x = temp_object
@@ -158,13 +159,13 @@ def pdf(file_handle, position, temp_object):
         current_bytes = bytes.hex(file_handle.read(7))
         if current_bytes == "0a2525454f460a" or current_bytes == "0d2525454f460d":
             # possible end of file found
-            end_position_png = position_png
+            end_position_png = position_png + 7
             # print("possible pdf ending string:", end_position_png)
         file_handle.seek(position_png)
         current_bytes = bytes.hex(file_handle.read(6))
         if current_bytes == "0a2525454f46":
             # end of file found
-            end_position_png = position_png
+            end_position_png = position_png + 6
             # print("possible pdf ending string:", end_position_png)
         # check for new file type signature
         if end_position_png > 0 and current_bytes in specific_signatures:
@@ -174,7 +175,7 @@ def pdf(file_handle, position, temp_object):
         current_bytes = bytes.hex(file_handle.read(9))
         if current_bytes == "0d0a2525454f460d0a":
             # end of file found
-            end_position_png = position_png
+            end_position_png = position_png + 9
             # print("possible pdf ending string:", end_position_png)
         # now scan for start of a new filetype to find the real end of the pdf
         file_handle.seek(position_png)
@@ -284,7 +285,7 @@ def bmp(file_handle, position, temp_object):
         return 1
     # create avi file object, recover file, and computes sha256
     temp_object.name = str(temp_object.start) + ".bmp"
-    temp_object.end = temp_obj.start + temp_obj.size
+    temp_object.end = temp_obj.start + temp_obj.size - 1
     temp_object.type = "bmp"
     # print("calling recover file for avi")
     # x = temp_object
@@ -308,7 +309,7 @@ def docx(file_handle, position, temp_object):
         current_bytes = bytes.hex(file_handle.read(4))
         if current_bytes == "504b0506":
             # end of file found
-            end_position_jpg = position_jpg + 22
+            end_position_jpg = position_jpg + 21
             break
         position_jpg += 1
     temp_object.end = end_position_jpg
@@ -322,7 +323,7 @@ def docx(file_handle, position, temp_object):
 
 def print_results():
     for x in found_files:
-        print("name:", x.name, "type:", x.type, "start:", x.start, "end:", x.end, "size:", x.size, "hash:",
+        print("name:", x.name, "Start Offset:", hex(x.start), "End Offset:", hex(x.end), "hash:",
               x.hash)
     return 0
 
@@ -373,7 +374,7 @@ if __name__ == '__main__':
     #    print(x, first_byte_text[x], number_of_bytes[first_byte_text[x]])
     position = 0
     file_size = os.path.getsize(filename)
-    # file_size = 300000
+    file_size = 60000000
     while position < file_size:
         working_file.seek(position)
         current_byte = working_file.read(1)
