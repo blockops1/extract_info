@@ -48,7 +48,7 @@ def avi(file_handle, position, temp_object):
     # print("position in function avi:", position)
     file_handle.seek(position + 4)
     temp_object.start = position
-    temp_object.size = int.from_bytes(file_handle.read(4), 'little') + 5
+    temp_object.size = int.from_bytes(file_handle.read(4), 'little') + 8
     # create avi file object, recover file, and computes sha256
     temp_object.name = str(temp_object.start) + ".avi"
     temp_object.end = temp_obj.start + temp_obj.size
@@ -310,7 +310,7 @@ def docx(file_handle, position, temp_object):
         current_bytes = bytes.hex(file_handle.read(4))
         if current_bytes == "504b0506":
             # end of file found
-            end_position_jpg = position_jpg + 21
+            end_position_jpg = position_jpg + 22
             break
         position_jpg += 1
     temp_object.end = end_position_jpg
@@ -326,9 +326,9 @@ def print_results():
     for x in found_files:
         print("name:", x.name, "Start Offset:", hex(x.start), "End Offset:", hex(x.end), "hash:",
               x.hash)
-        print("size:", x.size, "error?", x.end - x.start - x.size)
-        print("name:", x.name, "start:", hex(x.start), "end:", hex(x.end), "hash:",
-              x.hash)
+        # print("size:", x.size, "error?", x.end - x.start - x.size)
+        # print("name:", x.name, "start:", hex(x.start), "end:", hex(x.end), "hash:",
+        #      x.hash)
         # print("size:", x.size, "difference:", x.end - x.start - x.size)
     return 0
 
@@ -379,7 +379,7 @@ if __name__ == '__main__':
     #    print(x, first_byte_text[x], number_of_bytes[first_byte_text[x]])
     position = 0
     file_size = os.path.getsize(filename)
-    file_size = 60000000
+    # file_size = 60000000
     while position < file_size:
         working_file.seek(position)
         current_byte = working_file.read(1)
